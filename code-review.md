@@ -13,5 +13,4 @@
 3. Are there any code smells or problematic implementations?
 - When ever as the app is used the observable, as it always needs to unsubscribe to it, other ways there 
 may be a chances of happening memory leaks in the application, by the performance can reduce. inorder to avoid that we have to always unsubscribe to it when we have created our own observable. 
-- <coding-challenge-chart [data$]="quotes$"> Observables should not be cascaded to child components. Instead it should be <coding-challenge-chart [data$]="quotes$ | async">
 - We can make use of all library module as onpush change detection strategy so that minimal DOM changes will happen
