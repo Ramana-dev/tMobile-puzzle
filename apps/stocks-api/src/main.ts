@@ -3,7 +3,7 @@
  * This is only a minimal backend to get started.
  **/
 import { Server } from 'hapi';
-const h2o2 = require('@hapi/h2o2');
+const H2o2 = require('@hapi/h2o2');
 import { environment } from './environments/environment';
 
 const init = async () => {
@@ -18,46 +18,57 @@ const init = async () => {
     }
   });
 
-  await server.register(h2o2);
+ await server.register(H2o2);
 
-  const getChartData = async (symbol, period) => {
-      const result =  await server.inject(`/proxy/stock/${symbol}/chart/${period}`)
-    return result.payload;
+  const getData = async (symbol, period) => {
+   let result = '';
+    await server.inject(`/proxy/stock/${symbol}/chart/${period}`).then(res => {
+      result = res.payload;
+    });
+    return result;
   };
 
+
   server.method({
-    name: 'getChartData',
-    method: getChartData,
+    name: 'getData',
+    method: getData,
     options: {
       cache: {
-        expiresIn: 30 * 60 * 1000,
-        generateTimeout: 3000
+        expiresIn: 5 * 60 * 1000,
+        generateTimeout: 3000 // number of milliseconds to wait before returning a timeout error
       }
-    }
-  });
-
-  server.route({
-    method: 'GET',
-    path: '/',
-    handler: (request, h) => {
-      return {
-        hello: 'world'
-      };
     }
   });
 
   server.route({
     method: 'GET',
     path: '/beta/stock/{symbol}/chart/{period}',
+    handler: async (request, h) => {
+      return server.methods.getData(request.params.symbol, request.params.period);
+    }
+  });
+
+  server.route({
+    method: 'GET',
+    path: '/proxy/stock/{symbol}/chart/{period}',
     options: {
       handler: {
         proxy: {
-          uri: environment.apiURL + '/beta/stock/{symbol}/chart/{period}?token=' + environment.apiKey
+          uri: environment.apiURL + '/beta/stock/{symbol}/chart/{period}?token=' + environment.apiKey,
+          passThrough: true,
+          xforward: true
         }
       }
     }
   });
 
+  server.route({
+    method: '*',
+    path: '/{any*}',
+    handler:  (request, h) => {
+      return '404 Error! Page Not Found!';
+    }
+  });
 
   await server.start();
   console.log('Server running on %s', server.info.uri);
