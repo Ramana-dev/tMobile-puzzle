@@ -3,9 +3,9 @@ import { map, pick } from 'lodash-es';
 import { parse } from 'date-fns';
 
 export function transformPriceQueryResponse(
-  response: PriceQueryResponse[]
+  response: PriceQueryResponse[], fromDateTime: number, toDateTime: number
 ): PriceQuery[] {
-  return map(
+  const res =  map(
     response,
     responseItem =>
       ({
@@ -24,4 +24,7 @@ export function transformPriceQueryResponse(
         dateNumeric: parse(responseItem.date).getTime()
       } as PriceQuery)
   );
+  return res.filter((result) => {
+    return (result.dateNumeric >= fromDateTime) && (result.dateNumeric <= toDateTime)
+  });
 }
